@@ -8,7 +8,7 @@ public:
 	CollisionBox() :x0(1e20), y0(1e20), z0(1e20), x1(-1e20), y1(-1e20), z1(-1e20) {}
 	inline void update(Vec3 vtx) {
 		x0 = std::min(x0, vtx.x); x1 = std::max(x1, vtx.x);
-		y0 = std::min(x0, vtx.y); y1 = std::max(y1, vtx.y);
-		z0 = std::min(x0, vtx.z); z1 = std::max(z1, vtx.z);
+		y0 = std::min(y0, vtx.y); y1 = std::max(y1, vtx.y);
+		z0 = std::min(z0, vtx.z); z1 = std::max(z1, vtx.z);
 	}
 };

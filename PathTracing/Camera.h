@@ -4,6 +4,7 @@
 #include"SceneManager.h"
 #include<random>
 #include<omp.h>
+#include<ctime>
 
 std::mt19937 rnd(100);
 std::uniform_real_distribution<float> val11(-1, 1);
@@ -38,13 +39,14 @@ public:
 		int antinum = (int)std::sqrtf(antiliasing);
 		float aoffset = 0.5f / antinum;
 
+		clock_t start_time = clock();
 		printf("CPU cores number: %d all prepared\n", omp_get_num_procs());
 		for (int i = 0; i < h; i++) {
 			printf("\rrender processing: %.3f%%", 100.0f*i/(h-1));//\r光标回到行首
 #pragma omp parallel for
 			for (int j = 0; j < w; j++) {
 				Vec3& curcol = cols[j + w * i];
-				/*if (i == 308 && j == 476) {
+				/*if (i == 670 && j == 310) {
 					system("pause");
 				}*/
 				for (int ax = 0; ax < antinum; ax++) for (int ay = 0; ay < antinum; ay++) {//抗锯齿
@@ -62,7 +64,7 @@ public:
 				}*/
 			}
 		}
-		printf("\nRendering complete!\n");
+		printf("\nRendering complete! Time spent: %.3f s\n", (float)(clock()-start_time)/CLOCKS_PER_SEC);
 		return cols;
 	}
 
@@ -95,7 +97,7 @@ private:
 			float u, v, w; do { u = val11(rnd), v = val11(rnd); } while (u*u + v * v > 1);//半球面采样
 			w = std::sqrt(1 - u * u - v * v);//w也相当于cosθ(反射角)
 			return obj_col.castmult(
-				//scene->light_sample(vt, itsc) + 
+				/*scene->light_sample(vt, itsc) + */
 				radiance(Ray(itsc, vb*u + vc * v + vt * w), depth+1/*, true*/)*w
 			);//乘上w是标准的brdf，但颜色会偏暗，需要矫正，不乘效果也可以
 			//以物体的颜色，正片叠底到反射光

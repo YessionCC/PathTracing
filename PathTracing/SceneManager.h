@@ -49,8 +49,10 @@ public:
 				vtxs.push_back(Vec3(x, y, z));
 			}
 			else if (tmp == "f") {
-				int v1, v2, v3;
-				ss >> v1 >> v2 >> v3;
+				int v1, v2, v3; 
+				ss >> tmp; v1 = process_face_input(tmp);
+				ss >> tmp; v2 = process_face_input(tmp);
+				ss >> tmp; v3 = process_face_input(tmp);
 				v1 = foffset - 1 + v1; v2 = foffset - 1 + v2; v3 = foffset - 1 + v3;
 				obj_cur->faces.push_back(faces.size());
 				faces.push_back(Face(v1, v2, v3, objs.size()));
@@ -58,7 +60,7 @@ public:
 			}
 			else {
 				//TODO
-				printf("Unknown instruction\n");
+				//printf("Unknown instruction\n");
 			}
 		}
 		int ovtxn = obj_cur->vtxs.size();
@@ -89,7 +91,7 @@ public:
 			if (emision_objs.count(eobj)) 
 				ret = ret + objs[eobj]->emission*(cos1*-cos2/* / itsc.distance2(eitsc)*/);
 		}
-		return ret * 0.03f;
+		return ret * 0.05f;
 	}
 
 	void build_structure(int max_tri_num = 4) {
@@ -117,12 +119,35 @@ public:
 		}
 	}
 
+	void standizing_obj(Object* obj, float lim) {
+		float scale = 0;
+		for (int vtx : obj->vtxs) {
+			vtxs[vtx] = vtxs[vtx] - obj->center;
+			scale = std::max({ std::abs(vtxs[vtx].x), std::abs(vtxs[vtx].y), std::abs(vtxs[vtx].z) , scale });
+		}
+		scale = lim / scale;
+		for (int vtx : obj->vtxs) {
+			vtxs[vtx] = vtxs[vtx] * scale;
+		}
+		obj->center = Vec3();
+	}
+
 private:
+	int process_face_input(std::string& str) {
+		int ret = 0;//面顶点索引
+		for (int i = 0; i < str.size(); i++) {
+			if (str[i] == '/') break;
+			ret = ret * 10 + str[i] - '0';
+		}
+		return ret;
+	}
+
 	void _build_structure(int L, int R, int o, int max_tri_num) {
 		for (int i = L; i < R; i++) {
-			boxes[o].update(vtxs[faces[i].vtx1]);
-			boxes[o].update(vtxs[faces[i].vtx2]);
-			boxes[o].update(vtxs[faces[i].vtx3]);
+			Face& f = faces[fsid[i]];
+			boxes[o].update(vtxs[f.vtx1]);
+			boxes[o].update(vtxs[f.vtx2]);
+			boxes[o].update(vtxs[f.vtx3]);
 		}
 		if (R - L <= max_tri_num) return;
 		float dx = boxes[o].x1 - boxes[o].x0;
@@ -144,6 +169,7 @@ private:
 
 	int _ray_surface(Ray& ray, int o, int L, int R, Vec3& intersection) {//intersection(t, u, v)
 		if (R - L <= max_tri_num) {
+			//printf("%d %d\n", L, R);
 			float mint = 1e20; int idx = -1;
 			for (int i = L; i < R; i++) {//计算交点
 				Face& f = faces[fsid[i]];
@@ -164,7 +190,9 @@ private:
 		else {
 			float tmin, tmax;
 			ray.check_collide_box(boxes[o], tmin, tmax);
-			if (tmax < tmin || tmax < 0) return -1;
+			//printf("%f, %f\n", tmin, tmax);
+			if (tmax < tmin || tmax < 0) 
+				return -1;
 			int mid = (L + R) >> 1;
 			Vec3 itsc1, itsc2;
 			int ret1 = _ray_surface(ray, o * 2, L, mid, itsc1);
