@@ -100,7 +100,6 @@ int main() {
 	for (int i = 0; i < h; i++) {
 		for (int j = 0; j < w; j++) {
 			Vec3 c = cols[j + i * w];
-			//printf("%d, %d, %d %d %d\n", i, j, (int)c.x, (int)c.y, (int)c.z);
 			putpixel(j, i, RGB((int)c.x, (int)c.y, (int)c.z));
 		}
 	}
