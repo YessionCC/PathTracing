@@ -14,7 +14,8 @@ void scene1() {
 	obj11->color = Vec3(0.1, 0.1, 1);
 	obj11->material = Material::DIFFUSION;
 	obj12->color = Vec3(1, 0.6, 0.6);
-	obj12->material = Material::DIFFUSION;
+	obj12->material = Material::CERAMIC;
+	obj12->ceramic_smooth = 0.02f;
 	Object* obj2 = _ins->load_obj("scenes/scene2/cube.txt", true);
 	obj2->color = Vec3(1, 1, 1);
 	_ins->move_obj(obj2, Vec3(0.3, 2.8, 0));
@@ -88,7 +89,7 @@ void scene3() {
 }
 
 int main() {
-	scene3();
+	scene1();
 	Camera camera(Vec3(12.5, 6, 6), Vec3(-1, -0.3, -0.5));
 	//Camera camera(Vec3(4, 5, 5), Vec3(-1, 0, 0));
 	_ins->build_structure(4);

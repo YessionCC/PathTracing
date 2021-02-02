@@ -102,6 +102,49 @@ private:
 			);//乘上w是标准的brdf，但颜色会偏暗，需要矫正，不乘效果也可以
 			//以物体的颜色，正片叠底到反射光
 		}
+		else if (obj->material == Material::GLOSSY) {//凭自己的理解实现，没有参考资料
+			Vec3 vb = (ray.dir - vt * dftd).normalize();
+			Vec3 vc = vt.cross(vb);
+			Vec3 vref = ray.dir - vt * (2 * dftd);
+			float ctr = vref.dot(vb);
+			float u, v, w, tt1, tt2, ogr = obj->glossy_radius;
+			if (1 - ctr < ogr) {
+				tt1 = (1 + ogr - ctr) / 2.0f;
+				tt2 = (1 + ctr - ogr) / 2.0f;
+			}
+			else tt1 = ogr, tt2 = ctr;
+			do { 
+				u = val11(rnd)*tt1 + tt2;
+				v = val11(rnd)*ogr;
+			} while (u*u + v * v > 1);
+			w = std::sqrt(1 - u * u - v * v);
+			return obj_col.castmult(
+				/*scene->light_sample(vt, itsc) + */
+				radiance(Ray(itsc, vb*u + vc * v + vt * w), depth + 1/*, true*/)*w
+			);
+		}
+		else if (obj->material == Material::CERAMIC) {
+			float ocera = obj->ceramic_smooth;
+			Ray ref(itsc, ray.dir - vt * (2 * dftd));
+			Vec3 vb = (ray.dir - vt * dftd).normalize();
+			Vec3 vc = vt.cross(vb);
+			float u, v, w; do { u = val11(rnd), v = val11(rnd); } while (u*u + v * v > 1);
+			w = std::sqrt(1 - u * u - v * v);
+			
+			if (depth > 2) {
+				float p = val01(rnd);
+				if (p < ocera) return obj_col.castmult(radiance(ref, depth + 1));
+				else return obj_col.castmult(
+					/*scene->light_sample(vt, itsc) + */
+					radiance(Ray(itsc, vb*u + vc * v + vt * w), depth + 1/*, true*/)*w
+				);
+			}
+			else return obj_col.castmult(
+				/*scene->light_sample(vt, itsc) + */
+				radiance(ref, depth + 1)*ocera +
+				radiance(Ray(itsc, vb*u + vc * v + vt * w), depth + 1/*, true*/)*(w*(1 - ocera))
+			);
+		}
 		else if (obj->material == Material::SPECULAR) {//镜面反射
 			return obj_col.castmult(radiance(Ray(itsc, ray.dir - vt * (2 * dftd)), depth + 1));
 		}
@@ -119,8 +162,8 @@ private:
 			re = 0.5f;//不使用菲涅尔项
 			if (depth > 3) {//由于折射光将使得光线数量加倍，必须在折射光处使用RR，否则当rrp>0.5后，光线数量增而不停
 				float p = val01(rnd);
-				if (p < rrp) return obj_col.castmult(radiance(ref, depth + 1)*(re / rrp));
-				else return obj_col.castmult(radiance(refr, depth + 1)*((1 - re) / (1 - rrp)));//保证符合菲涅尔公式的条件下期望不变
+				if (p < re) return obj_col.castmult(radiance(ref, depth + 1));
+				else return obj_col.castmult(radiance(refr, depth + 1));//保证符合菲涅尔公式的条件下期望不变
 			}
 			else return obj_col.castmult(radiance(ref, depth + 1)*re + radiance(refr, depth + 1)*(1 - re));
 		}
