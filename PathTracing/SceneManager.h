@@ -4,12 +4,15 @@
 #include<sstream>
 #include<fstream>
 #include<cmath>
-#include<unordered_set>
+#include<random>
 #include"Vec3.h"
 #include"Face.h"
 #include"Ray.h"
 #include"Object.h"
 #include"CollisionBox.h"
+
+extern std::mt19937 rnd;
+extern std::uniform_real_distribution<float> val01;
 
 class SceneManager {
 private:
@@ -26,7 +29,8 @@ private:
 	SceneManager() {}
 public:
 	std::vector<Object*> objs;//场景中的所有物体(包括发光体)
-	std::unordered_set<int> emision_objs;//场景中的发光体编号
+	std::vector<int> emission_idx;//发光面的索引，用于随机抽样
+	std::vector<float> emission_area;//发光面的面积
 
 	static SceneManager* instance() {
 		return _instance;
@@ -77,26 +81,34 @@ public:
 		return fts[fid];
 	}
 
-	Vec3 light_sample(Vec3& vt, Vec3& itsc) {
-		Vec3 ret;
-		for (int oidx : emision_objs) {
-			Vec3 dir = (objs[oidx]->center - itsc).normalize();
-			float cos1 = vt.dot(dir);
-			if (cos1 < 0) continue;
-			int eret; Vec3 eitsc; Ray cray = Ray(itsc, dir);
-			eret = ray_surface(cray, eitsc);
-			float cos2 = dir.dot(fts[eret]);
-			if (cos2 > 0) continue;
-			int eobj = faces[eret].objidx;
-			if (emision_objs.count(eobj)) 
-				ret = ret + objs[eobj]->emission*(cos1*-cos2/* / itsc.distance2(eitsc)*/);
-		}
-		return ret * 0.05f;
+	Vec3 light_sample(Vec3& vt, Vec3& itsc) {//向光源采样，以低采样率得到较好的结果，但时间可能与不用的时间差不多(甚至更长)，对于光源较小可用
+		int cho = rand() % emission_idx.size();//这里只随机采样一个发光面
+		int chof = emission_idx[cho];
+		Face& f = faces[chof];
+		float t1 = val01(rnd), t2 = val01(rnd);
+		float u = std::min(t1, t2), v = std::abs(t1 - t2), w = 1 - std::max(t1, t2);
+		Vec3 aim = vtxs[f.vtx1] * u + vtxs[f.vtx2] * v + vtxs[f.vtx3] * w;
+		Vec3 dir = (aim - itsc).normalize();
+		float cos1 = vt.dot(dir);
+		if (cos1 < 0) return 0;
+		int eret; Vec3 eitsc; Ray cray = Ray(itsc, dir);
+		eret = ray_surface(cray, eitsc);
+		if (eret != chof) return 0;
+		float cos2 = dir.dot(fts[eret]);
+		if (cos2 > 0) return 0;
+		return objs[faces[chof].objidx]->emission*((cos1*-cos2 / itsc.distance2(eitsc))*emission_area[cho]*1.5f);
 	}
 
 	void build_structure(int max_tri_num = 4) {
 		for (int i = 0; i < objs.size(); i++)
-			if (objs[i]->material == Material::EMISSION) emision_objs.insert(i);
+			if (objs[i]->material == Material::EMISSION) {
+				for (int f : objs[i]->faces) {
+					Face &ff = faces[f];
+					float area = (vtxs[ff.vtx2] - vtxs[ff.vtx1]).cross(vtxs[ff.vtx3] - vtxs[ff.vtx1]).norm() / 2;
+					emission_area.push_back(area);
+					emission_idx.push_back(f);
+				}
+			}
 		this->max_tri_num = max_tri_num;
 		boxes.resize(4*faces.size());
 		fsid.resize(faces.size());

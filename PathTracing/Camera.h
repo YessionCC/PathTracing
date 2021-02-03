@@ -16,6 +16,7 @@ private:
 	Vec3 lookz, looky, lookx;
 	float rrp = 0.8f;
 	SceneManager* scene;
+
 public:
 	Camera(Vec3 position, Vec3 lookz, Vec3 looky) : position(position) {
 		lookz.normalize();
