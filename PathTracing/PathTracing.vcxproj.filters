@@ -21,6 +21,15 @@
     <ClCompile Include="CollisionBox.h">
       <Filter>头文件</Filter>
     </ClCompile>
+    <ClCompile Include="SceneManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SceneManager.h">

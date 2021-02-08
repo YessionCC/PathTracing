@@ -9,7 +9,7 @@ public:
 	Ray() {}
 	Ray(Vec3 o, Vec3 dir) :o(o), dir(dir) {}
 	void check_collide_box(CollisionBox& box, float& tmin, float& tmax) {
-		tmin = -1e20, tmax = 1e20;
+		tmin = FLT_MIN, tmax = FLT_MAX;
 		float t1, t2;
 		if (dir.x != 0) {
 			t1 = (box.x0 - o.x) / dir.x;
