@@ -105,6 +105,23 @@ void SceneManager::standizing_obj(Object* obj, float lim) {
 	obj->center = Vec3();
 }
 
+void SceneManager::inverse_z_axis(Object * obj) {
+	for (int vtx : obj->vtxs) {
+		float tmp = vtxs[vtx].z;
+		vtxs[vtx].z = vtxs[vtx].y;
+		vtxs[vtx].y = -tmp;
+	}
+}
+
+void SceneManager::rotate_arround_z(Object* obj, float deg) {//逆时针
+	deg = deg * 3.14 / 180;
+	for (int vtx : obj->vtxs) {
+		float tx = vtxs[vtx].x, ty = vtxs[vtx].y;
+		vtxs[vtx].x = cos(deg)*tx + sin(deg)*ty;
+		vtxs[vtx].y = -sin(deg)*tx + cos(deg)*ty;
+	}
+}
+
 int SceneManager::process_face_input(std::string& str) {
 	int ret = 0;//面顶点索引
 	for (int i = 0; i < str.size(); i++) {

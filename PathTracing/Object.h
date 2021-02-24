@@ -25,5 +25,7 @@ public:
 
 	void move(Vec3 dir);//¿þÀÜ²Ù×÷
 	void std_scale(int scale);
+	void inverse_y_axis();
+	void rotate_arround_z(float deg);
 	static Object* load_obj(const char path[], bool is_calc_vt = false);
 };

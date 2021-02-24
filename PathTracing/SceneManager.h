@@ -55,6 +55,10 @@ public:
 
 	void standizing_obj(Object* obj, float lim);
 
+	void inverse_z_axis(Object* obj);
+
+	void rotate_arround_z(Object* obj, float deg);
+
 private:
 	int process_face_input(std::string& str);
 
